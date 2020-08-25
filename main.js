@@ -75,7 +75,41 @@ methods.set('/posts.post', function ({ response, searchParams }) {
     posts.unshift(post);
     sendJSON(response, post);
 });
-methods.set('/posts.edit', function () { });
+methods.set('/posts.edit', function ({ response, searchParams }) {
+    if (!searchParams.has('id')) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    if (!searchParams.has('content')) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const id = Number(searchParams.get('id'));
+
+    if (Number.isNaN(id)) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const content = searchParams.get('content');
+
+    const postData = posts.find((value) => {
+        if (value.id === id) {
+            return value;
+        }
+    });
+
+    if (!postData) {
+        sendResponse(response, { status: statusNotFound });
+        return;
+    }
+
+    postData.content = content;
+
+    sendJSON(response, postData);
+});
 methods.set('/posts.delete', function () { });
 
 const server = http.createServer(function (request, response) {
