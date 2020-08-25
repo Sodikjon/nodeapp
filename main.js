@@ -10,8 +10,8 @@ const statusNotFound = 404;
 let nextId = 1;
 const posts = [];
 
-function sendResponse(response, {status = statusOk, headers = {}, body = null}) {
-    Object.entries(headers).forEach(function([key, value]) {
+function sendResponse(response, { status = statusOk, headers = {}, body = null }) {
+    Object.entries(headers).forEach(function ([key, value]) {
         response.setHeader(key, value);
     });
     response.writeHead(status);
@@ -20,7 +20,7 @@ function sendResponse(response, {status = statusOk, headers = {}, body = null}) 
 
 function sendJSON(response, body) {
     sendResponse(response, {
-        headers:{
+        headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
@@ -28,13 +28,39 @@ function sendJSON(response, body) {
 }
 
 const methods = new Map();
-methods.set('/posts.get', function({response}) {
+methods.set('/posts.get', function ({ response }) {
     sendJSON(response, posts);
 });
-methods.set('/posts.getById', function() {});
-methods.set('/posts.post', function({response, searchParams}) {
+methods.set('/posts.getById', function ({ response, searchParams }) {
+    if (!searchParams.has('id')) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const id = Number(searchParams.get('id'));
+
+    if (Number.isNaN(id)) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const postData = posts.find((value) => {
+        if (value.id === id) {
+            return value;
+        }
+    });
+
+    if (!postData) {
+        sendResponse(response, { status: statusNotFound });
+        return;
+    }
+
+    sendJSON(response, postData);
+
+});
+methods.set('/posts.post', function ({ response, searchParams }) {
     if (!searchParams.has('content')) {
-        sendResponse(response, {status: statusBadRequest});
+        sendResponse(response, { status: statusBadRequest });
         return;
     }
 
@@ -49,15 +75,15 @@ methods.set('/posts.post', function({response, searchParams}) {
     posts.unshift(post);
     sendJSON(response, post);
 });
-methods.set('/posts.edit', function() {});
-methods.set('/posts.delete', function() {});
+methods.set('/posts.edit', function () { });
+methods.set('/posts.delete', function () { });
 
-const server = http.createServer(function(request, response) {
-    const {pathname, searchParams} = new URL(request.url, `http://${request.headers.host}`);
+const server = http.createServer(function (request, response) {
+    const { pathname, searchParams } = new URL(request.url, `http://${request.headers.host}`);
 
     const method = methods.get(pathname);
     if (method === undefined) {
-        sendResponse(response, {status: statusNotFound});
+        sendResponse(response, { status: statusNotFound });
         return;
     }
 
@@ -72,18 +98,3 @@ const server = http.createServer(function(request, response) {
 });
 
 server.listen(port);
-
-// class Demo {
-//     get property() {
-//         console.log('get');
-//         return 'property';
-//     }
-
-//     set property(value) {
-//         console.log(`set ${value}`);
-//     }
-// }
-
-// const demo = new Demo();
-// const property = demo.property;
-// demo.property = 'new value';
