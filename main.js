@@ -110,7 +110,39 @@ methods.set('/posts.edit', function ({ response, searchParams }) {
 
     sendJSON(response, postData);
 });
-methods.set('/posts.delete', function () { });
+methods.set('/posts.delete', function ({ response, searchParams }) {
+    if (!searchParams.has('id')) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const deleteCount = 1;
+    const id = Number(searchParams.get('id'));
+
+    if (Number.isNaN(id)) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const postData = posts.find((value) => {
+        if (value.id === id) {
+            return value;
+        }
+    });
+
+    if (!postData) {
+        sendResponse(response, { status: statusNotFound });
+        return;
+    }
+    const postIndex = posts.findIndex((value) => {
+        if (value.id === id) {
+            return value;
+        }
+    });
+
+    posts.splice(postIndex, deleteCount);
+    sendJSON(response, postData);
+});
 
 const server = http.createServer(function (request, response) {
     const { pathname, searchParams } = new URL(request.url, `http://${request.headers.host}`);
