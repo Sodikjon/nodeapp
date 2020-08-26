@@ -155,6 +155,40 @@ methods.set('/posts.delete', function ({ response, searchParams }) {
     sendJSON(response, postData);
 });
 
+methods.set('/posts.restore', function ({ response, searchParams }) {
+    if (!searchParams.has('id')) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const id = Number(searchParams.get('id'));
+
+    if (Number.isNaN(id)) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+
+    const postData = posts.find((value) => {
+        if (value.id === id) {
+            return value;
+        }
+    });
+
+    if (!postData) {
+        sendResponse(response, { status: statusNotFound });
+        return;
+    }
+    
+    if (!postData.removed) {
+        sendResponse(response, { status: statusBadRequest });
+        return;
+    }
+    
+    postData.removed = false;
+
+    sendJSON(response, postData);
+});
+
 const server = http.createServer(function (request, response) {
     const { pathname, searchParams } = new URL(request.url, `http://${request.headers.host}`);
 
