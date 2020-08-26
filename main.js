@@ -29,7 +29,8 @@ function sendJSON(response, body) {
 
 const methods = new Map();
 methods.set('/posts.get', function ({ response }) {
-    sendJSON(response, posts);
+    const resultPosts = posts.filter(post => post.removed === false);
+    sendJSON(response, resultPosts);
 });
 methods.set('/posts.getById', function ({ response, searchParams }) {
     if (!searchParams.has('id')) {
@@ -55,6 +56,11 @@ methods.set('/posts.getById', function ({ response, searchParams }) {
         return;
     }
 
+    if (postData.removed) {
+        sendResponse(response, { status: statusNotFound });
+        return;
+    }
+
     sendJSON(response, postData);
 
 });
@@ -70,6 +76,7 @@ methods.set('/posts.post', function ({ response, searchParams }) {
         id: nextId++,
         content: content,
         created: Date.now(),
+        removed: false,
     };
 
     posts.unshift(post);
@@ -105,6 +112,10 @@ methods.set('/posts.edit', function ({ response, searchParams }) {
         sendResponse(response, { status: statusNotFound });
         return;
     }
+    if (postData.removed) {
+        sendResponse(response, { status: statusNotFound });
+        return;
+    }
 
     postData.content = content;
 
@@ -134,13 +145,14 @@ methods.set('/posts.delete', function ({ response, searchParams }) {
         sendResponse(response, { status: statusNotFound });
         return;
     }
-    const postIndex = posts.findIndex((value) => {
-        if (value.id === id) {
-            return value;
-        }
-    });
+    
+    if (postData.removed) {
+        sendResponse(response, { status: statusNotFound });
+        return;
+    }
+    
+    postData.removed = true;
 
-    posts.splice(postIndex, deleteCount);
     sendJSON(response, postData);
 });
 
