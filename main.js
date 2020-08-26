@@ -127,7 +127,6 @@ methods.set('/posts.delete', function ({ response, searchParams }) {
         return;
     }
 
-    const deleteCount = 1;
     const id = Number(searchParams.get('id'));
 
     if (Number.isNaN(id)) {
