@@ -154,7 +154,6 @@ methods.set('/posts.delete', function ({ response, searchParams }) {
 
     sendJSON(response, postData);
 });
-
 methods.set('/posts.restore', function ({ response, searchParams }) {
     if (!searchParams.has('id')) {
         sendResponse(response, { status: statusBadRequest });
